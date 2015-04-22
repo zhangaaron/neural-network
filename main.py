@@ -23,5 +23,6 @@ def shuffle_and_resize(data):
 data = io.loadmat("./digit-dataset/train.mat")
 labels, features = shuffle_and_resize(data)
 
+
 N = NN.NeuralNet(labels, features)
-print N.forward_classify(features[0])
+print N.compute_delta_2(N.data[0], N.labels[0])

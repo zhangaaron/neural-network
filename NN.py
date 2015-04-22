@@ -24,14 +24,17 @@ def preprocess_1(data):
     return with_bias / 255.0
 
 def mean_squared(real, predicted):
-    
+    return 0.5 * np.sum(np.square(real - predicted))
 
 
 class NeuralNet(object):
     labels = None
+    data = None
     preprocess = None
     layers = []
     cost = None
+    z_2 = None
+    x_2 = None
 
     def __init__(self, labels, data, preprocess=preprocess_1, hidden_size=200, cost_func=mean_squared):
         self.preprocess = preprocess
@@ -50,17 +53,30 @@ class NeuralNet(object):
         pass
 
     def forward_classify(self, data):
-        z_1 = np.dot(self.preprocess(data), self.layers[0].weights)
-        print self.layers[0].weights.shape
+        z_1 = np.reshape(np.dot(data, self.layers[0].weights), (1, -1))
         x_1 = add_bias(self.layers[0].f(z_1))
-        z_2 = np.dot(x_1, self.layers[1].weights)
-        x_2 = self.layers[1].f(z_2)
-        return x_2
+        self.z_2 = np.dot(x_1, self.layers[1].weights)
+        self.x_2 = self.layers[1].f(self.z_2)
+        return self.x_2
+
+    def compute_delta_2(self, data, label):
+        self.forward_classify(data)
+        return (self.x_2 - label) * self.layers[1].dFdZ(self.z_2)
+
+
+def partial_tanh(z):
+    return 1 - np.tanh(z) ** 2
+
+
+def partial_sigmoid(z):
+    sig = scipy.special.epxit(z)
+    return sig(1 - sig)
 
 
 class Layer(object):
     weights = None
     f = None
+    dFdZ = None
 
     def __init__(self, my_size, output_size, is_input=True):
         # print my_size
@@ -69,8 +85,10 @@ class Layer(object):
         self.weights = np.random.uniform(low=-1.0, high=1.0, size=(my_size, output_size))
         if is_input:
             self.f = np.tanh
+            self.dFdZ = partial_tanh
         else:
             self.f = scipy.special.expit
+
 
 class OutputLayer(Layer):
     def __init__(self):
