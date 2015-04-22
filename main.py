@@ -25,5 +25,7 @@ labels, features = shuffle_and_resize(data)
 
 
 N = NN.NeuralNet(labels, features)
-print 'N labels', N.labels[0]
-print N.compute_delta_2(N.data[0], N.labels[0])
+# print N.compute_delta_2(N.data[0], N.labels[0])
+# a =  N.compute_dJdW1(N.data[0], N.labels[0])
+# print a
+N.train()
