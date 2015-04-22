@@ -11,6 +11,7 @@ import os
 
 OUTPUT = 10
 
+
 def add_bias(np_array):
     bias = np.ones((np_array.shape[0], np_array.shape[1] + 1))
     bias[:, :-1] = np_array
@@ -46,9 +47,8 @@ class NeuralNet(object):
     delta1 = None
     iteration = 0
     nu = None
-    pickler = None
 
-    def __init__(self, labels, data, preprocess=preprocess_1, hidden_size=200, cost_func=mean_squared, nu=0.1, save_file = 'pickle.txt'):
+    def __init__(self, labels, data, preprocess=preprocess_1, hidden_size=200, cost_func=mean_squared, nu=0.1):
         self.nu = nu
         self.preprocess = preprocess
         self.data = preprocess(data)
@@ -61,14 +61,12 @@ class NeuralNet(object):
         self.layers.append(Layer(hidden_size + 1, OUTPUT, False))
         self.layers.append(OutputLayer())
         self.cost = cost_func
-        # self.pickler = pickle.Pickle()
-        self.save_file = save_file
         print 'initialization done'
 
     def train(self):
         self.shuffle()
-        for i in xrange(500000):
-            if i % 20000 == 0:
+        for i in xrange(50000):
+            if i % 50000 == 0:
                 print 'performance', self.compute_accuracy()
                 self.shuffle()
             self.backwards_propogate(self.data[i % 60000], self.labels[i % 60000])
@@ -126,6 +124,7 @@ def partial_sigmoid(z):
     sig = scipy.special.expit(z)
     return sig * (1 - sig)
 
+
 class Layer(object):
     weights = None
     f = None
@@ -146,8 +145,10 @@ class OutputLayer(Layer):
     def __init__(self):
         pass
 
+
 class NNXEntropy(NeuralNet):
     eps = 0.0000001
+
     def compute_delta_2(self, data, label):
         cost_partial = label / (self.x_2 + self.eps) - (1 + self.eps - label) / (1 + self.eps - self.x_2)
         self.delta2 = -1 * cost_partial * self.layers[1].dFdZ(self.z_2)
