@@ -20,12 +20,13 @@ def shuffle_and_resize(data):
     # np.random.shuffle(features)
     return labels, features
 
+
+
 data = io.loadmat("./digit-dataset/train.mat")
+# test_data = io.load
 labels, features = shuffle_and_resize(data)
 
+print data
 
-N = NN.NeuralNet(labels, features)
-# print N.compute_delta_2(N.data[0], N.labels[0])
-# a =  N.compute_dJdW1(N.data[0], N.labels[0])
-# print a
-N.train()
+# N = NN.NNXEntropy(labels, features)
+# N.train()

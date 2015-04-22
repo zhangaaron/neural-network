@@ -6,6 +6,8 @@ from sklearn.cross_validation import train_test_split
 import matplotlib.pyplot as plt
 import math
 from random import randint
+import pickle
+import os
 
 OUTPUT = 10
 
@@ -44,27 +46,31 @@ class NeuralNet(object):
     delta1 = None
     iteration = 0
     nu = None
+    pickler = None
 
-    def __init__(self, labels, data, preprocess=preprocess_1, hidden_size=200, cost_func=mean_squared, nu=0.1):
+    def __init__(self, labels, data, preprocess=preprocess_1, hidden_size=200, cost_func=mean_squared, nu=0.1, save_file = 'pickle.txt'):
         self.nu = nu
         self.preprocess = preprocess
         self.data = preprocess(data)
         self.non_binary_labels = labels
         self.labels = np.zeros((len(labels), OUTPUT))
+        print labels.size
         for i, label in zip(xrange(labels.size), labels):
             self.labels[i, label] = 1
         self.layers.append(Layer(self.data.shape[1], hidden_size, True))
         self.layers.append(Layer(hidden_size + 1, OUTPUT, False))
         self.layers.append(OutputLayer())
         self.cost = cost_func
+        # self.pickler = pickle.Pickle()
+        self.save_file = save_file
         print 'initialization done'
 
     def train(self):
         self.shuffle()
-        for i in xrange(50000):
-            if i % 10000:
-                self.shuffle()
+        for i in xrange(500000):
+            if i % 20000 == 0:
                 print 'performance', self.compute_accuracy()
+                self.shuffle()
             self.backwards_propogate(self.data[i % 60000], self.labels[i % 60000])
             self.layers[0].weights -= self.nu * self.dJdW1
             self.layers[1].weights -= self.nu * self.dJdW2
@@ -95,13 +101,10 @@ class NeuralNet(object):
         self.compute_dJdW2(data, label)
         self.compute_delta_1(data, label)
         self.dJdW1 = np.reshape(data.T, (-1, 1)) * self.delta1
-
-    def checkpoint():
-        pass
+        return self.dJdW1
 
     def compute_accuracy(self):
         predicted = [self.label(x) for x in self.data]
-        print predicted
         diff = self.non_binary_labels - predicted
         total = len(self.non_binary_labels)
         return float(total - np.sum(preprocessing.binarize((np.absolute(diff))))) / total
@@ -123,7 +126,6 @@ def partial_sigmoid(z):
     sig = scipy.special.expit(z)
     return sig * (1 - sig)
 
-
 class Layer(object):
     weights = None
     f = None
@@ -143,3 +145,9 @@ class Layer(object):
 class OutputLayer(Layer):
     def __init__(self):
         pass
+
+class NNXEntropy(NeuralNet):
+    eps = 0.0000001
+    def compute_delta_2(self, data, label):
+        cost_partial = label / (self.x_2 + self.eps) - (1 + self.eps - label) / (1 + self.eps - self.x_2)
+        self.delta2 = -1 * cost_partial * self.layers[1].dFdZ(self.z_2)
