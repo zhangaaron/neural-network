@@ -69,8 +69,8 @@ def partial_tanh(z):
 
 
 def partial_sigmoid(z):
-    sig = scipy.special.epxit(z)
-    return sig(1 - sig)
+    sig = scipy.special.expit(z)
+    return sig * (1 - sig)
 
 
 class Layer(object):
@@ -88,6 +88,7 @@ class Layer(object):
             self.dFdZ = partial_tanh
         else:
             self.f = scipy.special.expit
+            self.dFdZ = partial_sigmoid
 
 
 class OutputLayer(Layer):
